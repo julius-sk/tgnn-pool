@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+results/*.json
+results/*.csv
+results/*.png
+!results/.gitkeep
+figs/
+*.npy
+*.pt
+*.log

@@ -1,0 +1,9 @@
+# Derivations (B1-B3) and the mock backend of X1 need only the standard library
+# plus these two.  Nothing here requires the CXL pool or a GPU.
+matplotlib>=3.7
+pyyaml>=6.0
+
+# The pool backend of X1 and all of X2/X3 additionally need, on the cluster:
+#   torch, dgl, graphstorm, cxl_shm
+# They are deliberately NOT listed here so that `pip install -r requirements.txt`
+# works on a laptop.

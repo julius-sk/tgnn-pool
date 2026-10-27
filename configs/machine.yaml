@@ -1,0 +1,51 @@
+# Machine description.  Every number carries an evidence tag:
+#   measured  - observed on this hardware, with the observation named
+#   vendor    - from a datasheet
+#   assumed   - a placeholder that must be replaced before any claim is made
+#
+# Replace this file to describe a different cluster; nothing in the code
+# hardcodes these values.
+
+name: solab
+
+host:
+  count: 2                      # measured: s1 and s2, symmetric
+  dram_bytes: 503_000_000_000   # measured: ~503 GB usable per host
+  dram_gather_bytes_per_s: 5_800_000_000
+  # measured: MAG temporal gather, 225 MB per iteration, 768-dim fp32 rows.
+  # A second workload (papers100M, 128-dim rows) reached 14.4e9; row width
+  # changes this by ~2.5x, so it is a per-workload quantity, not a bus limit.
+  numa_nodes: 4                 # measured
+  cxl_near_numa_node: 2         # measured: the pool is near node 2
+
+gpu:
+  per_host: 1                   # measured: one RTX A6000 per host
+  memory_bytes: 48_000_000_000  # vendor
+
+pool:
+  # The device is larger than the region the library formats.  CXL_SHM_DAX_SIZE
+  # is a compile-time constant, so the formatted size is a build decision, and
+  # the pool records nowhere which value was used.
+  device_bytes: 552_000_000_000      # measured: /sys/bus/dax/devices/dax1.0/size, 514 GiB
+  usable_bytes: 500_000_000_000      # the size this project plans to format at
+  currently_formatted_bytes: 137_438_953_472   # measured: 128 GiB, recovered from the index offset
+  max_hosts: 2                        # measured: CXL_SHM_MAX_NODES=2
+
+  gather_bytes_per_s_single_reader: 5_100_000_000
+  # measured: MAG temporal, one reader, 225 MB per iteration.
+
+  gather_bytes_per_s_aggregate: null
+  # NOT MEASURED.  This is the single most load-bearing unknown in B2: whether
+  # two readers each get 5.1 GB/s or whether they split one device limit.
+  # experiment X2b (the contention curve) fills it in.  Until then B2 reports a
+  # range instead of a number.
+
+  ingest_bytes_per_s: 900_000_000     # measured: per-day delta-CSR publish
+
+distdgl:
+  # measured on the MAG window workload, single host, 1 partition
+  shm_steady_bytes: 112_000_000_000
+  shm_load_peak_bytes: 207_000_000_000
+  repartition_seconds: null
+  # NOT MEASURED.  experiment X2 fills it in.  This is the number the
+  # snapshot-admission comparison turns on, so it must not be guessed.

@@ -1,0 +1,50 @@
+# Workload description.  Two scales of the same dataset: the ten-snapshot
+# window everything has been measured on, and the full graph, which is the
+# target the capacity derivation (B3) is about.
+#
+# MAG timestamps are YEARS, not days.  The framework README that this workload
+# came from says "each day"; the dataset paper and two independent sources say
+# the timestamp is the publication year.  Code and documents here say "snapshot"
+# and, where a unit is needed, "year".
+
+name: mag
+
+full:
+  # Reported by the dataset paper and confirmed by a second paper's table.
+  nodes: 121_751_665
+  edges: 1_297_748_926
+  feature_dim: 768
+  edge_feature_dim: 0
+  classes: 152
+  snapshots: 120               # years
+
+window:
+  # The slice every measurement in this project was taken on.
+  snapshot_range: [100, 110]   # years 2000-2009
+  snapshots: 10
+  nodes: 32_395_325            # measured: unique endpoints in the window
+  edges: 325_663_662           # measured: directed
+  labeled_nodes: 349_178       # measured: after time filtering
+  feature_bytes_fp32: 99_500_000_000   # measured
+  per_snapshot_edges: [38_500_000, null, null, null, null, null, null, null, null, 97_500_000]
+  # measured: first and last.  Monotonically growing; the last snapshot is the
+  # largest.  The eight middle values are not recorded and are interpolated by
+  # the code when needed, which is flagged in the output.
+
+training:
+  batch_size: 512
+  fanout: [20, 15]
+  batches_per_epoch: 545       # measured
+  seconds_per_epoch: 428       # measured: DRAM baseline, 30 epochs
+  seconds_per_batch: 0.600     # measured
+  gather_bytes_per_batch: 225_000_000   # measured
+  best_val_accuracy: 0.6084    # measured: epoch 28, still climbing at cutoff
+  best_test_accuracy: 0.6036   # measured
+
+layout:
+  # How the graph is stored in the pool today.  B3 compares this against two
+  # alternatives.
+  scheme: per_snapshot_delta_csr
+  index_bytes: 8               # int64 row pointers and column indices
+  rowptr_bytes_per_snapshot: 259_000_000   # measured, window scale
+  rowptr_total_bytes: 2_600_000_000        # measured: 259 MB x 10
